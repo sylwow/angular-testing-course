@@ -1,4 +1,4 @@
-import { async, ComponentFixture, fakeAsync, flush, flushMicrotasks, TestBed } from '@angular/core/testing';
+import { async, ComponentFixture, fakeAsync, flush, flushMicrotasks, TestBed, tick, waitForAsync } from '@angular/core/testing';
 import { CoursesModule } from '../courses.module';
 import { DebugElement } from '@angular/core';
 
@@ -11,7 +11,7 @@ import { setupCourses } from '../common/setup-test-data';
 import { By } from '@angular/platform-browser';
 import { of } from 'rxjs';
 import { NoopAnimationsModule } from '@angular/platform-browser/animations';
-import { click } from '../common/test-utils';
+import { click, sleep } from '../common/test-utils';
 import { BrowserDynamicTestingModule } from '@angular/platform-browser-dynamic/testing';
 import { delay, timeout } from 'rxjs/operators';
 
@@ -92,20 +92,42 @@ describe('HomeComponent', () => {
   });
 
 
-  it("should display advanced courses when tab clicked", () => {
+  it("should display advanced courses when tab clicked fakeAsync", fakeAsync(() => {
     coursesService.findAllCourses.and.returnValue(of(setupCourses()));
 
     fixture.detectChanges();
 
     const tabs = el.queryAll(By.css('.mat-tab-label'));
 
-    tabs[1].nativeElement.click();
+    click(tabs[1]);//.nativeElement.click();
 
     fixture.detectChanges();
 
-    const firstCourseTitle = el.query(By.css('.mat-card-title'));
+    flush();
 
-    expect(firstCourseTitle.nativeElement.textContent).toContain('Angular Security Course - Web Security Fundamentals');
+    const firstCourseTitle = el.query(By.css('.mat-tab-body-active .mat-card-title'));
+
+    expect(firstCourseTitle.nativeElement.textContent).toContain('Angular Security Course');
+
+  }));
+
+  it("should display advanced courses when tab clicked async", async () => {
+    coursesService.findAllCourses.and.returnValue(of(setupCourses()));
+
+    fixture.detectChanges();
+
+    const tabs = el.queryAll(By.css('.mat-tab-label'));
+
+    click(tabs[1]);//.nativeElement.click();
+
+    fixture.detectChanges();
+
+    await sleep(1000);
+
+    const firstCourseTitle = el.query(By.css('.mat-tab-body-active .mat-card-title'));
+
+    expect(firstCourseTitle.nativeElement.textContent).toContain('Angular Security Course');
+
   });
 
 });
